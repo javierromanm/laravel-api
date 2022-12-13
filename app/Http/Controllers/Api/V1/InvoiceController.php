@@ -7,8 +7,10 @@ use App\Http\Requests\StoreInvoiceRequest;
 use App\Http\Requests\UpdateInvoiceRequest;
 use App\Http\Resources\V1\InvoiceResource;
 use App\Http\Resources\V1\InvoiceCollection;
+use Illuminate\Http\Request;
 
 use App\Http\Controllers\Controller;
+use App\Filters\V1\InvoiceFilter;
 
 class InvoiceController extends Controller
 {
@@ -17,9 +19,15 @@ class InvoiceController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        return new InvoiceCollection(Invoice::paginate());
+        $filter = new InvoiceFilter();
+        $queryItems = $filter->transform($request);
+        if(count($queryItems) == 0) {
+            return new InvoiceCollection(Invoice::paginate());
+        } else {
+            return new InvoiceCollection(Invoice::where($queryItems)->paginate()->appends($request->query()));
+        }        
     }
 
     /**
